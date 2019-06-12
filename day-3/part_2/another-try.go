@@ -10,17 +10,18 @@ import (
 )
 
 type claim struct {
-	id     int
-	x      int
-	y      int
-	width  int
-	height int
+	id           int
+	x            int
+	y            int
+	width        int
+	height       int
+	squareInches []squareInch
 }
 
 type squareInch []*claim
 
 func main() {
-	file, err := os.Open("./input")
+	file, err := os.Open("./input2")
 
 	if err != nil {
 		fmt.Println("Error : ", err)
@@ -33,49 +34,43 @@ func main() {
 
 	var fabric [1000][1000]squareInch
 
-	var elligibleClaims []int
+	var claims []*claim
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		claim := claimFromLine(line)
-
 		for i := claim.x; i < claim.x+claim.width; i++ {
 			for j := claim.y; j < claim.y+claim.height; j++ {
 				fabric[i][j] = append(fabric[i][j], claim)
+
+				claim.squareInches = append(claim.squareInches, fabric[i][j])
 			}
 		}
-
-		elligibleClaims = append(elligibleClaims, claim.id)
+		claims = append(claims, claim)
 	}
 
-	for i := 0; i < 1000; i++ {
-		for j := 0; j < 1000; j++ {
-			if len(fabric[i][j]) >= 2 {
-				for _, claim := range fabric[i][j] {
-					elligibleClaims = remove(elligibleClaims, claim.id)
-				}
-			}
+	for _, claim := range claims {
+		var lengthInches []int
+		for _, squareInch := range claim.squareInches {
+			lengthInches = append(lengthInches, len(squareInch))
+		}
+		fmt.Println("Result : ", claim.id, lengthInches)
+
+		if claim.isAlone() {
+			fmt.Println("Result : ", claim.id)
+			// return
 		}
 	}
-
-	if len(elligibleClaims) > 1 {
-		fmt.Println("Error, too much elligible claims ! ")
-	}
-
-	fmt.Println("Result : ", elligibleClaims)
 }
 
-func remove(in []int, i int) []int {
-	res := make([]int, 0, len(in))
-	for _, value := range in {
-		if value == i {
-			continue
+func (c *claim) isAlone() bool {
+	for _, squareInch := range c.squareInches {
+		if len(squareInch) > 1 {
+			return false
 		}
-		res = append(res, value)
 	}
-
-	return res
+	return true
 }
 
 func claimFromLine(line string) *claim {
