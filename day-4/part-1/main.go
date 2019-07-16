@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -16,6 +17,8 @@ type record struct {
 }
 
 func main() {
+	var records []*record
+
 	file, err := os.Open("./example-input")
 
 	if err != nil {
@@ -30,7 +33,15 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		record := recordsFromLine(line)
+		records = append(records, recordsFromLine(line))
+	}
+
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].extractedTime.Before(records[j].extractedTime)
+	})
+
+	for _, record := range records {
+		fmt.Println("record : ", record.extractedTime)
 	}
 }
 
@@ -45,8 +56,6 @@ func recordsFromLine(line string) *record {
 	// re := regexp.MustCompile("\\[(.*?)\\]")
 	// fmt.Println(re.FindAllString(line, -1))
 	extractedTime, _ := time.Parse(time.RFC3339, result[0]+"-"+result[1]+"-"+result[2]+"T"+result[3]+":"+result[4]+":00Z")
-
-	fmt.Println("Line : ", result)
 
 	return &record{
 		extractedTime: extractedTime,
